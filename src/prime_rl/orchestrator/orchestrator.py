@@ -93,6 +93,7 @@ async def orchestrate(config: OrchestratorConfig):
         tokenizer=tokenizer,
         run_config=config,
     )
+    logger.info(f"Initialized monitor")
 
     # Load environment and extract dataset
     logger.info(

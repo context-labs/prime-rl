@@ -45,7 +45,8 @@ async def custom_build_async_engine_client(
     # Ensures everything is shutdown and cleaned up on error/exit
     engine_args = AsyncEngineArgs.from_cli_args(args)
     engine_args.worker_extension_cls = args.worker_extension_cls
-    engine_args.logprobs_mode = LogprobsMode.PROCESSED_LOGPROBS
+    # engine_args.logprobs_mode = LogprobsMode.PROCESSED_LOGPROBS
+    engine_args.logprobs_mode = 'processed_logprobs'
 
     async with build_async_engine_client_from_engine_args(
         engine_args, disable_frontend_multiprocessing=args.disable_frontend_multiprocessing, client_config=client_config
@@ -140,6 +141,7 @@ def server(config: InferenceConfig, vllm_args: list[str]):
     args = parser.parse_args(args=vllm_args, namespace=config.to_vllm())
     assert args is not None
     validate_parsed_serve_args(args)
+    logger.info(f"args: {args}")
 
     # Set the worker extension class based on the broadcast backend
     args.worker_extension_cls = WORKER_EXTENSION_CLS[config.weight_broadcast.type]
