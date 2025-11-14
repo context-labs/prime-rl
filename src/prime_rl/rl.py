@@ -446,12 +446,22 @@ def rl(config: RLConfig):
 
     # Collect training environment IDs
     for env_config in config.orchestrator.env:
+        #If it is a path, skip
+        if env_config.id.endswith(".py"):
+            logger.warning(f"Skipping environment {env_config.id} as it is a path")
+            continue
+
         if "/" in env_config.id:
             env_ids_to_install.add(env_config.id)
 
     # Collect evaluation environment IDs
     if config.orchestrator.eval:
         for eval_env_config in config.orchestrator.eval.env:
+            #If it is a path, skip
+            if eval_env_config.id.endswith(".py"):
+                logger.warning(f"Skipping evaluation environment {eval_env_config.id} as it is a path")
+                continue
+            
             if "/" in eval_env_config.id:
                 env_ids_to_install.add(eval_env_config.id)
 

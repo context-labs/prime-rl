@@ -27,6 +27,7 @@ from transformers import AutoTokenizer
 from prime_rl.orchestrator.ckpt import Progress, setup_ckpt_manager
 from prime_rl.eval.utils import run_evals
 from prime_rl.utils.vf import generate_batch
+from prime_rl.utils.env_loader import load_environment
 from prime_rl.utils.client import (
     check_has_model,
     check_health,
@@ -98,7 +99,7 @@ async def orchestrate(config: OrchestratorConfig):
         f"Loading {len(config.env)} training environment(s) ({', '.join(env.name or env.id for env in config.env)})"
     )
     env = vf.EnvGroup(
-        envs=[vf.load_environment(env.id, **env.args) for env in config.env],
+        envs=[load_environment(env.id, **env.args) for env in config.env],
         env_names=[env.name or env.id for env in config.env],
         map_kwargs=dict(writer_batch_size=1),  # Set defensively to not error on map operations on large datasets
         env_mix_strategy=config.env_mix.strategy,
