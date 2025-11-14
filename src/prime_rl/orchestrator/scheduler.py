@@ -209,8 +209,28 @@ class Scheduler:
                     batch_rollouts = batch_rollouts[: self.config.batch_size]
                     break
 
-                _, client = self.inflight_group_rollouts.pop(finished_group_rollout)
-                generate_outputs: GenerateOutputs = finished_group_rollout.result()
+                inflight_info = self.inflight_group_rollouts.pop(finished_group_rollout, None)
+                if inflight_info is None:
+                    # The rollout was already cancelled and cleaned up elsewhere (e.g. policy update).
+                    if finished_group_rollout.cancelled():
+                        self.logger.debug("Ignoring cancelled rollout that was already re-scheduled.")
+                    else:
+                        self.logger.warning("Finished rollout not found in inflight map; skipping.")
+                    continue
+
+                _, client = inflight_info
+
+                if finished_group_rollout.cancelled():
+                    self.logger.debug("Rollout task cancelled; re-scheduling client.")
+                    await self.schedule_group_rollout(client)
+                    continue
+
+                try:
+                    generate_outputs: GenerateOutputs = finished_group_rollout.result()
+                except Exception:
+                    self.logger.exception("Rollout task failed; re-scheduling client.")
+                    await self.schedule_group_rollout(client)
+                    continue
 
                 accepted_rollouts = self.process_generate_outputs(generate_outputs=generate_outputs)
                 batch_rollouts.extend(accepted_rollouts)
